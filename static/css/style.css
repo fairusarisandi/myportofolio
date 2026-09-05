@@ -31,6 +31,13 @@ h1, .brand {
     padding: 0 1.5rem;
 }
 
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
 .site-header {
     border-bottom: 1px solid var(--line);
 }
@@ -167,6 +174,47 @@ h1, .brand {
     object-fit: cover;
     border-radius: var(--radius);
     border: 3px solid var(--ink);
+}
+
+#education {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.education-logo {
+    width: auto;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
+.education-list {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.education-item {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.education-content h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+}
+
+.education-content p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.education-content p span {
+    display: block;
+    margin-top: 0.25rem;
 }
 
 .site-footer {
