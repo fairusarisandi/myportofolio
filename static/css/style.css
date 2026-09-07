@@ -217,6 +217,57 @@ h1, .brand {
     margin-top: 0.25rem;
 }
 
+.skills-carousel {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 1rem;
+}
+
+.skills-track {
+    display: flex;
+    width: max-content;
+    overflow: hidden;
+    animation: skills-scroll 15s linear infinite;
+}
+
+.skills-group {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.skill-item {
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skill-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.skills-carousel:hover .skills-track {
+    animation-play-state: paused;
+}
+
+@keyframes skills-scroll {
+    from {
+        transform: translateX(0%);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
 .site-footer {
     padding: 1.5rem;
     color: var(--text-muted);
