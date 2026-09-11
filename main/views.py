@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from main.models import Experience
+from main.models import Experience, Education, TechStack
 
 def show_main(request):
     context = {
@@ -8,6 +8,8 @@ def show_main(request):
         "npm": "2506588752",
         "study_program": "S1 Sistem Informasi",
         "bio": "Undergraduate Information System Student at Universitas Indonesia",
+        "education_list": Education.objects.all(),
+        "techstack_list": TechStack.objects.all(),
     }
     return render(request, "index.html", context)
 

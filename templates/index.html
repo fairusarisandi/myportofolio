@@ -55,78 +55,37 @@
             <div class="container">
                 <h2 class="section-title">Education</h2>
                 <div class="education-list">
+                    {% for education in education_list %}
                     <article class="education-item">
-                        <img src="/static/img/ui.png" alt="Universitas Indonesia Logo" class="education-logo">
+                        <img src="{{ education.logo }}" alt="{{ education.institution }} Logo" class="education-logo">
                         <div class="education-content">
-                            <h3>Universitas Indonesia</h3>
+                            <h3>{{ education.institution }}</h3>
                             <p>
-                                S1 Sistem Informasi 
-                                <span>2025 - Present</span>
+                                {{ education.degree }}
+                                <span>{{ education.started_at|date:"Y" }} - {{ education.ended_at|default:"Present" }}</span>
                             </p>
                         </div>
                     </article>
-                    <article class="education-item">
-                        <img src="/static/img/pnj.png" alt="Politeknik Negeri Jakarta Logo" class="education-logo">
-                        <div class="education-content">
-                            <h3>Politeknik Negeri Jakarta</h3>
-                            <p>
-                                D4 Teknik Otomasi Listrik Industri 
-                                <span>2024 - 2025</span>
-                            </p>
-                        </div>
-                    </article>
-                    <article class="education-item">
-                        <img src="/static/img/man13.png" alt="MAN 13 Jakarta Logo" class="education-logo">
-                        <div class="education-content">
-                            <h3>MAN 13 Jakarta</h3>
-                            <p>
-                                High School 
-                                <span>2022 - 2024</span>
-                            </p>
-                        </div>
-                    </article>
+                    {% empty %}
+                    <p>No education information available.</p>
+                    {% endfor %}
                 </div>
             </div>
         </section>
 
         <section>
             <div class="container">
-                <h2 class="section-title">Skills</h2>
-                <div class="skills-carousel">
-                    <div class="skills-track">
-                        <div class="skills-group">
-                            <div class="skill-item">
-                                <img src="/static/img/python.png" alt="Python Logo">
+                <h2 class="section-title">Tech Stack</h2>
+                <div class="techstack-carousel">
+                    <div class="techstack-track">
+                        <div class="techstack-group">
+                            {% for techstack in techstack_list %}
+                            <div class="techstack-item">
+                                <img src="{{ techstack.logo }}" alt="{{ techstack.name }} Logo">
                             </div>
-                            <div class="skill-item">
-                                <img src="/static/img/java.png" alt="Java Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/javascript.png" alt="JavaScript Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/html.png" alt="HTML Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/css.png" alt="CSS Logo">
-                            </div>
-                        </div>
-                        <div class="skills-group">
-                            <div class="skill-item">
-                                <img src="/static/img/python.png" alt="Python Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/java.png" alt="Java Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/javascript.png" alt="JavaScript Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/html.png" alt="HTML Logo">
-                            </div>
-                            <div class="skill-item">
-                                <img src="/static/img/css.png" alt="CSS Logo">
-                            </div>
+                            {% empty %}
+                            <p>No tech stack information available.</p>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
