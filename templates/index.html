@@ -62,7 +62,7 @@
                             <h3>{{ education.institution }}</h3>
                             <p>
                                 {{ education.degree }}
-                                <span>{{ education.started_at|date:"Y" }} - {{ education.ended_at|default:"Present" }}</span>
+                                <span>{{ education.started_at|date:"Y" }} - {{ education.ended_at|date:"Y"|default:"Present" }}</span>
                             </p>
                         </div>
                     </article>
