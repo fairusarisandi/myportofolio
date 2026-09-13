@@ -7,7 +7,7 @@ def show_main(request):
         "full_name": "Muhammad Fairus Azfar Arisandi",
         "npm": "2506588752",
         "study_program": "S1 Sistem Informasi",
-        "bio": "Undergraduate Information System Student at Universitas Indonesia",
+        "bio": "Undergraduate Information System Student at Universitas Indonesia with a strong interest in Product Management, Business Technology, and Data Science. Curious and eager to learn, I am motivated to keep growing and building skills for future opportunities.",
         "education_list": Education.objects.all(),
         "techstack_list": TechStack.objects.all(),
     }
