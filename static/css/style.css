@@ -26,9 +26,7 @@ h1, .brand {
 }
 
 .container {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 5rem;
 }
 
 .section-title {
@@ -40,6 +38,7 @@ h1, .brand {
 
 .site-header {
     border-bottom: 1px solid var(--line);
+    padding: 0 5rem;
 }
 
 .site-header .container {
@@ -293,7 +292,7 @@ h1, .brand {
     }
 }
 
-.experience-section {
+.experience-section, .project-section {
     padding: 4rem 0;
     border-top: 1px solid var(--line);
 }
@@ -306,42 +305,43 @@ h1, .brand {
     text-transform: uppercase;
 }
 
-.experience-section h1 {
+.experience-section h1, .project-section h1 {
     margin: 0.4rem 0 1.5rem;
     font-size: 2rem;
 }
 
-.experience-grid {
+.experience-grid, .project-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
 }
 
-.experience-card {
+.experience-card, .project-card {
     padding: 1.25rem;
     background-color: #fff;
     border: 1px solid var(--line);
     border-radius: var(--radius);
 }
 
-.experience-category {
+.experience-category, .project-category {
     color: var(--accent-dark);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
 }
 
-.experience-card h2 {
+.experience-card h2, .project-card h2 {
     margin: 0.5rem 0;
     font-size: 1.25rem;
 }
 
 .experience-description,
+.project-description,
 .empty-state {
     color: var(--text-muted);
 }
 
-.experience-status {
+.experience-status, .project-status {
     margin-top: 1rem;
     font-size: 0.85rem;
     font-weight: 600;
