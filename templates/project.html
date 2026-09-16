@@ -4,29 +4,47 @@
         <section class="project-section" id="project">
             <div class="container">
                 <p class="section-kicker">Proyek saya sejauh ini</p>
-                <h1>Projects</h1>
-
+                <div class="project-header">
+                    <h1>Project</h1>
+                    <a href="{% url 'main:create_project' %}"
+                       class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Tambah Proyek
+                    </a>
+                </div>
+                <form method="get"
+                      action="{% url 'mian:show_project' }"
+                      class="project-search">
+                    <input type="search"
+                           name="name"
+                           value="{{ title_query }}"
+                           placeholder="Cari berdasarkan nama proyek"
+                           class="project-search__input"
+                           aria-label="Cari berdasarkan nama proyek">
+                    <button type="submit" class="button">Cari</button>
+                </form>
                 <div class="project-grid">
                     {% for project in project_list %}
                         <article class="project-card">
-                            <span class="project-category">
-                                {{ project.get_category_display }}
-                            </span>
-                            <h2>{{ project.title }}</h2>
-                            <p class="project-description">
-                                {{ project.description }}
-                            </p>
-
-                            {% if project.is_ongoing %}
-                                <p class="project-status">Sedang berlangsung</p>
-                            {% else %}
-                                <p class="project-status">Selesai</p>
+                            {% if project.thumnail %}
+                                <img src="{{ project.thumnil}}"
+                                     alt="Gambar {{ project.thumnail }}"
+                                     class="project-image">
                             {% endif %}
+                            <h2>{{ project.name }}</h2>
+                            <p class="project-description">{{ project.description }}</p>
+                            <div class="project-card-actions">
+                                <div class="project-actions">
+                                    {% include "components/project_delete_modal.html" with project=project %}
+                                </div>
+                            </div>
                         </article>
                     {% empty %}
-                        <p class="empty-state">
-                            Belum ada proyek yang ditambahkan.
-                        </p>
+                        {% if title_query %}
+                            <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
+                        {% else %}
+                            <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
