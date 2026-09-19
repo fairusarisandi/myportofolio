@@ -13,7 +13,7 @@
                     </a>
                 </div>
                 <form method="get"
-                      action="{% url 'mian:show_project' }"
+                      action="{% url 'main:show_project' }"
                       class="project-search">
                     <input type="search"
                            name="name"
@@ -26,9 +26,9 @@
                 <div class="project-grid">
                     {% for project in project_list %}
                         <article class="project-card">
-                            {% if project.thumnail %}
-                                <img src="{{ project.thumnil}}"
-                                     alt="Gambar {{ project.thumnail }}"
+                            {% if project.thumbnail %}
+                                <img src="{{ project.thumbnail}}"
+                                     alt="Gambar {{ project.thumbnail }}"
                                      class="project-image">
                             {% endif %}
                             <h2>{{ project.name }}</h2>
