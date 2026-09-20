@@ -37,9 +37,7 @@
                             <h2>{{ project.name }}</h2>
                             <p class="project-description">{{ project.description }}</p>
                             <div class="project-card-actions">
-                                <div class="project-actions">
-                                    {% include "components/project_delete_modal.html" with project=project %}
-                                </div>
+                                {% include "components/project_delete_modal.html" with project=project %}
                             </div>
                         </article>
                     {% empty %}
