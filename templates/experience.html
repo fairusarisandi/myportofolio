@@ -41,9 +41,7 @@
                             <h2>{{ experience.title }}</h2>
                             <p class="experience-description">{{ experience.description }}</p>
                             <div class="experience-card-actions">
-                                <div class="experience-actions">
-                                    {% include "components/experience_delete_modal.html" with experience=experience %}
-                                </div>
+                                {% include "components/experience_delete_modal.html" with experience=experience %}
                             </div>
 
                             {% if experience.is_ongoing %}

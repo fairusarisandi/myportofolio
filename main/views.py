@@ -41,12 +41,30 @@ def create_experience(request):
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Proyek baru berhasil ditambahkan!")
+        messages.success(request, "Experience baru berhasil ditambahkan!")
         return redirect("main:show_experience")
-        
+
     context = {
         "name": "Fairus",
         "form": form,
+        "is_edit": False,
+    }
+    return render(request, "experience_form.html", context)
+
+def update_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    form = ExperienceForm(request.POST or None, instance=experience)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Experience berhasil diperbarui!")
+        return redirect("main:show_experience")
+
+    context = {
+        "name": "Fairus",
+        "form": form,
+        "is_edit": True,
+        "experience": experience,
     }
     return render(request, "experience_form.html", context)
 

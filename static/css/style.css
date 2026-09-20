@@ -498,7 +498,7 @@ h1, .brand {
 .project-card-actions,
 .experience-card-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     margin-top: auto;
 }
 
