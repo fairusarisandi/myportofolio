@@ -431,8 +431,9 @@ h1, .brand {
 .project-image,
 .experience-image {
     display: block;
+    object-fit: cover;
     width: 100%;
-    height: auto;
+    aspect-ratio: 16 / 10;
     border: 1px solid black;
     border-radius: var(--radius);
 }
@@ -594,40 +595,53 @@ h1, .brand {
 }
 
 @media (max-width: 600px) {
-    .project-header {
+    .project-header,
+    .experience-header {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .project-add-button {
+    .project-grid,
+    .experience-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+    .project-add-button,
+    .experience-add-button {
         width: 100%;
         justify-content: center;
     }
 
-    .project-search {
+    .project-search,
+    .experience-search {
         flex-direction: column;
     }
 
-    .project-search .button {
+    .project-search .button,
+    .experience-search .button {
         width: 100%;
     }
 
-    .project-delete-modal {
+    .project-delete-modal,
+    .experience-delete-modal {
         align-items: flex-end;
         padding: 0;
     }
 
-    .project-delete-modal__content {
+    .project-delete-modal__content,
+    .experience-delete-modal__content {
         width: 100%;
         padding: 1.25rem;
         border-radius: var(--radius) var(--radius) 0 0;
     }
 
-    .project-delete-modal__actions {
+    .project-delete-modal__actions,
+    .experience-delete-modal__actions {
         flex-direction: column-reverse;
     }
 
-    .project-delete-modal__actions .button {
+    .project-delete-modal__actions .button,
+    .experience-delete-modal__actions .button {
         width: 100%;
         text-align: center;
     }
