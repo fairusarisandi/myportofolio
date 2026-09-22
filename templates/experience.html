@@ -9,11 +9,13 @@
                 <p class="section-kicker">Perjalanan saya sejauh ini</p>
                 <div class="experience-header">
                     <h1>Experience</h1>
-                    <a href="{% url 'main:create_experience' %}"
-                       class="button experience-add-button">
-                        <span aria-hidden="true">+</span>
-                        Tambah Experience
-                    </a>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'main:create_experience' %}"
+                        class="button experience-add-button">
+                            <span aria-hidden="true">+</span>
+                            Tambah Experience
+                        </a>
+                    {% endif %}
                 </div>
                 <form method="get"
                       action="{% url "main:show_experience" %}"
@@ -40,10 +42,11 @@
                             </span>
                             <h2>{{ experience.title }}</h2>
                             <p class="experience-description">{{ experience.description }}</p>
-                            <div class="experience-card-actions">
-                                {% include "components/experience_delete_modal.html" with experience=experience %}
-                            </div>
-
+                            {% if user.is_superuser %}
+                                <div class="experience-card-actions">
+                                    {% include "components/experience_delete_modal.html" with experience=experience %}
+                                </div>
+                            {% endif %}
                             {% if experience.is_ongoing %}
                                 <p class="experience-status">Sedang berlangsung</p>
                             {% else %}
