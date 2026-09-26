@@ -1,5 +1,5 @@
 <div class="project-actions">
-    <form method="post" action="{% url 'main:toggle_star' project.id %}" class="star-form">
+    <form method="post" action="{% url 'main:toggle_star_project' project.id %}" class="star-form">
         {% csrf_token %}
         <button type="submit"
                 class="button button-star{% if user in project.starred_by.all %} is-starred{% endif %}"
