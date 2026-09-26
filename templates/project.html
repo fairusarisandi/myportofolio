@@ -40,9 +40,14 @@
                             <p class="project-description">{{ project.description }}</p>
                             <div class="project-card-actions">
                                 {% include "components/project_star.html" with project=project %}
-                                {% if user.is_superuser %}
-                                    {% include "components/project_delete_modal.html" with project=project %}
-                                {% endif %}
+                                <div class="project-actions">
+                                    {% if is_editor %}
+                                        {% include "components/project_edit.html" with project=project %}
+                                    {% endif %}
+                                    {% if user.is_superuser %}
+                                        {% include "components/project_delete_modal.html" with project=project %}
+                                    {% endif %}
+                                </div>
                             </div>
                         </article>
                     {% empty %}

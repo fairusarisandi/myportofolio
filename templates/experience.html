@@ -44,9 +44,14 @@
                             <p class="experience-description">{{ experience.description }}</p>
                             <div class="experience-card-actions">
                                 {% include "components/experience_star.html" with experience=experience %}
-                                {% if user.is_superuser %}
-                                    {% include "components/experience_delete_modal.html" with experience=experience %}
-                                {% endif %}
+                                <div class="experience-actions">
+                                    {% if is_editor %}
+                                        {% include "components/experience_edit.html" with experience=experience %}
+                                    {% endif %}
+                                    {% if user.is_superuser %}
+                                        {% include "components/exprience_delete_modal.html" with experience=experience %}
+                                    {% endif %}
+                                </div>
                             </div>
                             {% if experience.is_ongoing %}
                                 <p class="experience-status">Sedang berlangsung</p>

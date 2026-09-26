@@ -8,8 +8,16 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required 
+from django.contrib.auth.decorators import login_required, user_passes_test 
 from django.core.exceptions import PermissionDenied        
+
+def is_editor(user):
+    return user.groups.filter(name="Editor").exists() or user.is_superuser
+
+def editor_only(user):
+    if not is_editor(user):
+        raise PermissionDenied
+    return True
 
 def show_main(request):
     last_login = request.COOKIES.get('last_login', 'Belum ada sesi login / Cookie tidak ditemukan')
@@ -38,7 +46,8 @@ def show_experience(request):
     context = {
         "name": "Fairus",
         "experience_list": experiences,
-        "title_query": title_query
+        "title_query": title_query,
+        "is_editor": is_editor(request.user),
     }
     return render(request, "experience.html", context)
 
@@ -62,10 +71,8 @@ def create_experience(request):
     return render(request, "experience_form.html", context)
 
 @login_required(login_url="/login/")
-def update_experience(request, experience_id):
-    if not request.user.is_superuser:
-        raise PermissionDenied
-    
+@user_passes_test(editor_only, login_url="/login/")
+def update_experience(request, experience_id):    
     experience = get_object_or_404(Experience, pk=experience_id)
     form = ExperienceForm(request.POST or None, instance=experience)
 
@@ -120,6 +127,7 @@ def show_project(request):
         "name": "Fairus",
         "project_list": projects,
         "title_query": title_query,
+        "is_editor": is_editor(request.user),
     }
     return render(request, "project.html", context)
 
@@ -143,10 +151,8 @@ def create_project(request):
     return render(request, "projects_form.html", context)
 
 @login_required(login_url="/login/")
+@user_passes_test(editor_only, login_url="/login/")
 def update_project(request, project_id):
-    if not request.user.is_superuser:
-        raise PermissionDenied
-    
     project = get_object_or_404(Project, pk=project_id)
     form = ProjectForm(request.POST or None, instance=project)
 
