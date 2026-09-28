@@ -4,6 +4,58 @@ NPM: 2506588752
 
 Kelas: PBP F
 
+## 🚀 Panduan Instalasi & Setup Lokal
+
+Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer lokal Anda:
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/fairusarisandi/myportofolio.git
+cd myportofolio
+```
+
+### 2. Buat dan Aktifkan Virtual Environment
+**Windows:**
+```bash
+python -m venv env
+env\Scripts\activate
+```
+**macOS / Linux:**
+```bash
+python3 -m venv env
+source env/bin/activate
+```
+
+### 3. Instalasi Dependensi
+Pastikan `pip` sudah diperbarui, lalu instal paket yang dibutuhkan:
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Migrasi Database
+Terapkan skema model ke dalam database lokal:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 5. Konfigurasi Akun Admin & Group Editor
+Untuk dapat mengakses fitur tambah, ubah, dan hapus data, buat akun *superuser* terlebih dahulu:
+```bash
+python manage.py createsuperuser
+```
+*(Opsional)* Untuk menguji hak akses grup **Editor**:
+1. Jalankan server dan buka `http://localhost:8000/admin/`.
+2. Masuk menggunakan akun *superuser* yang baru dibuat.
+3. Buka menu **Groups** -> **Add Group**, lalu buat grup dengan nama **`Editor`**.
+4. Masukkan pengguna pilihan Anda ke dalam grup **`Editor`** melalui menu **Users**.
+
+### 6. Jalankan Server
+```bash
+python manage.py runserver
+```
+Buka *browser* dan akses aplikasi di `http://localhost:8000/`.
+
 ### Tugas 1
 1. Ya, saya menggunakan elemen semantik HTML5, seperti <section> untuk membagi page menjadi beberapa bagian. Saya juga menggunakan <artile> pada bagian education untuk mengelompokkan setiap riwayat pendidikan. Selain itu, dengan adanya elemen semantik, mempermudah proses styling menggunakan css dan membuat kode menjadi lebih terorganisir dan mudah dibaca.
 2. Tantangan yang saya temukan ketika membuat css menjadi responsif ialah mengatur konten yang berpotensi menjadi overflow ketika tampilan mobile. Pada tampilan desktop, elemen bisa diatur lebih lebar karena memiliki ruang yang cukup. Namun, pada tampilan mobile, perlu dilakukan penyesuaian supaya elemen menjadi tidak overflow. Contoh yang saya alami ialah ketika menyusun riwayat pendidikan. Pada tampilan desktop, memungkinkan untuk menampilkannya secara horizontal, tetapi di mobile harus dibuat secara vertikal.
