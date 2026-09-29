@@ -17,10 +17,12 @@
                         </a>
                     {% endif %}
                 </div>
-                <form method="get"
+                <form id="project-search-form"
+                      method="get"
                       action="{% url 'main:show_project' %}"
                       class="project-search">
-                    <input type="search"
+                    <input id="search-input"
+                           type="search"
                            name="name"
                            value="{{ title_query }}"
                            placeholder="Cari berdasarkan nama proyek"
@@ -28,37 +30,166 @@
                            aria-label="Cari berdasarkan nama proyek">
                     <button type="submit" class="button">Cari</button>
                 </form>
-                <div class="project-grid">
-                    {% for project in project_list %}
-                        <article class="project-card">
-                            {% if project.thumbnail %}
-                                <img src="{{ project.thumbnail}}"
-                                     alt="Gambar {{ project.thumbnail }}"
-                                     class="project-image">
-                            {% endif %}
-                            <h2>{{ project.name }}</h2>
-                            <p class="project-description">{{ project.description }}</p>
-                            <div class="project-card-actions">
-                                {% include "components/project_star.html" with project=project %}
-                                <div class="project-actions">
-                                    {% if is_editor %}
-                                        {% include "components/project_edit.html" with project=project %}
-                                    {% endif %}
-                                    {% if user.is_superuser %}
-                                        {% include "components/project_delete_modal.html" with project=project %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </article>
-                    {% empty %}
-                        {% if title_query %}
-                            <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
-                        {% else %}
-                            <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
-                        {% endif %}
-                    {% endfor %}
+
+                <!-- Loading State -->
+                <div id="loading" class="empty-state hide">
+                    <p>Memuat projects...</p>
                 </div>
+
+                <!-- Error State -->
+                <div id="error" class="empty-state hide">
+                    <p>Gagal memuat data projects. Silakan coba lagi.</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty" class="empty-state hide">
+                    <p>Belum ada proyek yang ditambahkan atau ditemukan.</p>
+                </div>
+
+                <!-- Project Grid -->
+                <div id="grid" class="experience-grid project-grid hide"></div>
             </div>
         </section>
     </main>
+    
+    <script>
+    // Konfigurasi
+    const BASE_PROJECTS_ENDPOINT = "{% url 'main:get_projects_json' %}";
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+    const IS_EDITOR = "{{ is_editor|yesno:'true,false' }}" === "true";
+    let projectsAbortController;
+
+    // Elemen DOM
+    const loadingState = document.getElementById('loading');
+    const errorState = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+    const gridContainer = document.getElementById('grid');
+    const searchForm = document.getElementById('project-search-form');
+    const searchInput = document.getElementById('search-input');
+    const SEARCH_DEBOUNCE_DELAY = 300;
+    let searchDebounceTimer;
+
+    // Menyembunyikan/Menampilkan section halaman
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        loadingState.classList.toggle('hide', !showLoading);
+        errorState.classList.toggle('hide', !showError);
+        emptyState.classList.toggle('hide', !showEmpty);
+        gridContainer.classList.toggle('hide', !showGrid);
+    }
+
+    // Membuat elemen card project
+    function buildProjectCardElement(item) {
+        const project = item.fields;
+        const projectId = item.pk;
+
+        const articleElement = document.createElement('article');
+        articleElement.className = 'experience-card';
+
+        const imageHtml = project.thumbnail
+            ? `<img src="${project.thumbnail}" alt="Gambar ${project.name}" class="project-image">`
+            : '';
+
+        // Dummy UUID digunakan untuk digantikan oleh ID asli dari data JSON
+        const deleteUrl = "{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', projectId);
+        const editUrl = "{% url 'main:edit_project' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', projectId);
+        const starUrl = "{% url 'main:toggle_star_project' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', projectId);
+
+        const deleteHtml = IS_SUPERUSER 
+            ? `{% include "components/project_delete_modal.html" %}`
+            : '';
+
+        const editHtml = IS_EDITOR
+            ? `{% include "components/project_edit.html" %}`
+            : '';
+
+        const isStarredClass = project.is_starred ? " is-starred" : "";
+        const starText = project.is_starred ? "Unstar" : "Star";
+        const starTitle = project.star_count > 0 
+            ? `Dibintangi oleh ${project.starred_by_names}` 
+            : "Jadilah yang pertama memberi star";
+        const starHtml = `{% include "components/project_star.html" %}`;
+
+        // Komponen card
+        const completeCardHtml = `
+            ${imageHtml}
+            <h2>${project.name}</h2>
+            <p class="experience-description">${project.description}</p>
+            <div class="project-card-actions">
+                <div class="project-actions">
+                    ${starHtml}
+                    ${editHtml}
+                    ${deleteHtml}
+                </div>
+            </div>
+        `;
+
+        articleElement.innerHTML = completeCardHtml;
+        return articleElement;
+    }
+
+    // Fetch data project
+    async function fetchProjects(searchQuery = "") {
+        if (projectsAbortController) projectsAbortController.abort();
+        projectsAbortController = new AbortController();
+
+        try {
+            displayPageSection({ showLoading: true });
+            
+            const url = searchQuery ? `${BASE_PROJECTS_ENDPOINT}?title=${encodeURIComponent(searchQuery)}` : BASE_PROJECTS_ENDPOINT;
+            
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: projectsAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch data');
+
+            const projectData = await response.json();
+
+            if (projectData.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                gridContainer.innerHTML = '';
+                projectData.forEach(item => {
+                    gridContainer.appendChild(buildProjectCardElement(item));
+                });
+                displayPageSection({ showGrid: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error loading projects:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    function searchProjects() {
+        fetchProjects(searchInput.value.trim());
+    }
+
+    searchInput.addEventListener("input", function() {
+        clearTimeout(searchDebounceTimer);
+
+        searchDebounceTimer = setTimeout(function() {
+            searchProjects();
+        }, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        searchProjects();
+    });
+
+    // Event Handlers untuk Form Search
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Mencegah reload halaman
+        fetchProjects(searchInput.value.trim()); // Jalankan pencarian via AJAX
+    });
+
+    // Start application
+    fetchProjects(searchInput.value.trim());
+    </script>
 {% endblock content %}
