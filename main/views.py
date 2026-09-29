@@ -120,6 +120,7 @@ def show_project(request):
         "name": "Fairus",
         "title_query": title_query,
         "is_editor": is_editor(request.user),
+        "form": ProjectForm(),
     }
     return render(request, "project.html", context)
 
