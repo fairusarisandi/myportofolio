@@ -82,6 +82,15 @@
         gridContainer.classList.toggle('hide', !showGrid);
     }
 
+        // Mengubah karakter khusus HTML menjadi entity agar ditampilkan sebagai teks
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
     // Membuat elemen card project
     function buildProjectCardElement(item) {
         const project = item.fields;
@@ -91,7 +100,7 @@
         articleElement.className = 'experience-card';
 
         const imageHtml = project.thumbnail
-            ? `<img src="${project.thumbnail}" alt="Gambar ${project.name}" class="project-image">`
+            ? `<img src="${escapeHtml(project.thumbnail)}" alt="Gambar ${escapeHtml(project.name)}" class="project-image">`
             : '';
 
         // Dummy UUID digunakan untuk digantikan oleh ID asli dari data JSON
@@ -113,15 +122,15 @@
         const isStarredClass = project.is_starred ? " is-starred" : "";
         const starText = project.is_starred ? "Unstar" : "Star";
         const starTitle = project.star_count > 0 
-            ? `Dibintangi oleh ${project.starred_by_names}` 
+            ? `Dibintangi oleh ${escapeHtml(project.starred_by_names)}` 
             : "Jadilah yang pertama memberi star";
         const starHtml = `{% include "components/project_star.html" %}`;
 
         // Komponen card
         const completeCardHtml = `
             ${imageHtml}
-            <h2>${project.name}</h2>
-            <p class="experience-description">${project.description}</p>
+            <h2>${escapeHtml(project.name)}</h2>
+            <p class="experience-description">${escapeHtml(project.description)}</p>
             <div class="project-card-actions">
                 <div class="project-actions">
                     ${starHtml}

@@ -5,6 +5,6 @@
             title="${starTitle}">
         <span aria-hidden="true">★</span>
         ${starText}
-        <span class="star-count">${project.star_count}</span>
+        <span class="star-count">${escapeHtml(project.star_count)}</span>
     </button>
 </form>
