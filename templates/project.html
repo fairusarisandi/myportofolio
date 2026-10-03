@@ -124,6 +124,7 @@
         const starTitle = project.star_count > 0 
             ? `Dibintangi oleh ${escapeHtml(project.starred_by_names)}` 
             : "Jadilah yang pertama memberi star";
+        const starCount = project.star_count;
         const starHtml = `{% include "components/project_star.html" %}`;
 
         // Komponen card
