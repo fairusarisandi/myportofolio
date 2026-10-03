@@ -1,0 +1,19 @@
+<article class="experience-card">
+    <img data-project-thumbnail
+         alt=""
+         class="project-image"
+         hidden>
+    <h2 data-project-name></h2>
+    <p class="experience-description" data-project-description></p>
+    <div class="project-card-actions">
+        <div class="project-actions">
+            {% include "components/project_star.html" %}
+            {% if is_editor %}
+                {% include "components/project_edit.html" %}
+            {% endif %}
+            {% if user.is_superuser %}
+                {% include "components/project_delete_modal.html" %}
+            {% endif %}
+        </div>
+    </div>
+</article>
