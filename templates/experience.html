@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block meta %}
     <title>{{ name }} - Experience</title>
 {% endblock meta %}
@@ -17,11 +18,13 @@
                         </a>
                     {% endif %}
                 </div>
-                <form method="get"
-                      action="{% url "main:show_experience" %}"
+                <form id="experience-search-form"
+                      method="get"
+                      action="{% url 'main:show_experience' %}"
                       class="experience-search">
-                    <input type="search"
-                           name="name"
+                    <input id="search-input"
+                           type="search"
+                           name="title"
                            value="{{ title_query }}"
                            placeholder="Cari berdasarkan judul experience"
                            class="experience-search__input"
@@ -29,45 +32,37 @@
                     <button type="submit" class="button">Cari</button>
                 </form>
 
-                <div class="experience-grid">
-                    {% for experience in experience_list %}
-                        <article class="experience-card">
-                            {% if experience.thumbnail %}
-                                <img src="{{ experience.thumbnail}}"
-                                     alt="Gambar {{ experience.thumbnail }}"
-                                     class="experience-image">
-                            {% endif %}
-                            <span class="experience-category">
-                                {{ experience.get_category_display }}
-                            </span>
-                            <h2>{{ experience.title }}</h2>
-                            <p class="experience-description">{{ experience.description }}</p>
-                            <div class="experience-card-actions">
-                                {% include "components/experience_star.html" with experience=experience %}
-                                <div class="experience-actions">
-                                    {% if is_editor %}
-                                        {% include "components/experience_edit.html" with experience=experience %}
-                                    {% endif %}
-                                    {% if user.is_superuser %}
-                                        {% include "components/exprience_delete_modal.html" with experience=experience %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% if experience.is_ongoing %}
-                                <p class="experience-status">Sedang berlangsung</p>
-                            {% else %}
-                                <p class="experience-status">Selesai</p>
-                            {% endif %}
-                        </article>
-                    {% empty %}
-                        {% if title_query %}
-                            <p class="empty-state">Tidak ada experience dengan title tersebut.</p>
-                        {% else %}
-                            <p class="empty-state">Belum ada experience yang ditambahkan.</p>
-                        {% endif %}
-                    {% endfor %}
+                <!-- Loading State -->
+                <div id="loading" class="empty-state hide">
+                    <p>Memuat experience...</p>
                 </div>
+
+                <!-- Error State -->
+                <div id="error" class="empty-state hide">
+                    <p>Gagal memuat data experience. Silakan coba lagi.</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty" class="empty-state hide">
+                    <p>Belum ada experience yang ditambahkan atau ditemukan.</p>
+                </div>
+
+                <!-- Experience Grid -->
+                <div id="grid" class="experience-grid project-grid hide"></div>
+
             </div>
         </section>
     </main>
+
+    <template id="experience-card-template">
+        {% include "components/experience_card.html" %}
+    </template>
+    <div id="experience-config"
+         hidden
+         data-experience-endpoint="{% url 'main:get_experience_json' %}"
+         data-edit-url-template="{% url 'main:edit_experience' '00000000-0000-0000-0000-000000000000' %}"
+         data-delete-url-template="{% url 'main:delete_experience' '00000000-0000-0000-0000-000000000000' %}"
+         data-star-url-template="{% url 'main:toggle_star_experience' '00000000-0000-0000-0000-000000000000' %}">
+    </div>
+    <script src="{% static 'js/experience.js' %}"></script>
 {% endblock content %}

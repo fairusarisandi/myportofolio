@@ -1,0 +1,20 @@
+<article class="experience-card">
+    <img data-experience-thumbnail
+         alt=""
+         class="experience-image"
+         hidden>
+    <h2 data-experience-title></h2>
+    <p class="experience-description" data-experience-description></p>
+    <span class="experience-category" data-experience-category></span>
+    <div class="experience-card-actions">
+        <div class="experience-actions">
+            {% include "components/experience_star.html" %}
+            {% if is_editor %}
+                {% include "components/experience_edit.html" %}
+            {% endif %}
+            {% if user.is_superuser %}
+                {% include "components/experience_delete_modal.html" %}
+            {% endif %}
+        </div>
+    </div>
+</article>
