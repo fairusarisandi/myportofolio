@@ -19,6 +19,8 @@
         delete: config.dataset.deleteUrlTemplate,
         star: config.dataset.starUrlTemplate,
     };
+    const searchDebounceDelay = 300;
+    let searchDebounceTimer;
     const experienceIdPlaceholder = '00000000-0000-0000-0000-000000000000';
     let experienceAbortController;
 
@@ -135,8 +137,14 @@
         fetchExperience(searchInput.value.trim());
     }
 
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(searchExperience, searchDebounceDelay);
+    });
+
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
+        clearTimeout(searchDebounceTimer);
         searchExperience();
     });
 
