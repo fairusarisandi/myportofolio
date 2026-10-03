@@ -164,7 +164,7 @@ def update_project(request, project_id):
     return render(request, "projects_form.html", context)
 
 def get_projects_json(request):
-    title_query = request.GET.get("title", "").strip()
+    title_query = request.GET.get("name", "").strip()
     projects = Project.objects.prefetch_related("starred_by").all()
 
     if title_query:
