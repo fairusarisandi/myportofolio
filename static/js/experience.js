@@ -6,6 +6,7 @@
     const gridContainer = document.getElementById('grid');
     const searchForm = document.getElementById('experience-search-form');
     const searchInput = document.getElementById('search-input');
+    const experienceForm = document.getElementById('experience-form')
     const experienceCardTemplate = document.getElementById('experience-card-template');
 
     if (!config || !loadingState || !errorState || !emptyState || !gridContainer || !searchForm || !searchInput || !experienceCardTemplate) {
@@ -147,6 +148,45 @@
         clearTimeout(searchDebounceTimer);
         searchExperience();
     });
+
+    if (experienceForm) {
+        experienceForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const submitButton = experienceForm.querySelector('button[type="submit"]');
+            if (!submitButton) {
+                console.error('experience form is missing its submit button.');
+                return;
+            }
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(experienceEndpoints.create, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': experienceForm.querySelector('[name="csrfmiddlewaretoken"]')?.value || '' },
+                    body: new FormData(experienceForm),
+                });
+                const result = await response.json().catch(() => ({}));
+
+                if (response.ok) {
+                    experienceForm.reset();
+                    document.getElementById('add-experience-modal')?.hidePopover();
+                    showToast('Berhasil', 'Experience baru berhasil ditambahkan!', 'success');
+                    fetchExperience(searchInput.value.trim());
+                } else {
+                    const errorMessages = result.errors
+                        ? Object.values(result.errors).flat().map((error) => error.message)
+                        : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+                    showToast('Gagal menambahkan experience', errorMessages.join(' '), 'error');
+                }
+            } catch (error) {
+                console.error('Error adding experience:', error);
+                showToast('Gagal menambahkan experience', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    }
 
     fetchExperience(searchInput.value.trim());
 })();
