@@ -149,6 +149,59 @@
         searchExperience();
     });
 
+    gridContainer.addEventListener('submit', async (event) => {
+        const starForm = event.target.closest('[data-experience-star-form]');
+        if (!starForm) {
+            return;
+        }
+
+        event.preventDefault();
+        const starButton = starForm.querySelector('[data-experience-star-button]');
+        starButton.disabled = true;
+
+        try {
+            const response = await fetch(starForm.action, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRFToken': starForm.querySelector('[name="csrfmiddlewaretoken"]').value,
+                },
+            });
+            if (!response.headers.get('content-type')?.includes('application/json')) {
+                throw new Error(
+                    response.redirected
+                        ? 'Silakan login untuk memberi star.'
+                        : 'Server mengembalikan respons yang tidak valid.',
+                );
+            }
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `Terjadi kesalahan (status ${response.status}).`);
+            }
+            if (
+                typeof result.is_starred !== 'boolean'
+                || !Number.isInteger(result.star_count)
+                || typeof result.starred_by_names !== 'string'
+            ) {
+                throw new Error('Server mengembalikan status star yang tidak valid.');
+            }
+
+            starButton.classList.toggle('is-starred', result.is_starred);
+            starButton.title = result.star_count > 0
+                ? `Dibintangi oleh ${result.starred_by_names}`
+                : 'Jadilah yang pertama memberi star';
+            starForm.querySelector('[data-experience-star-label]').textContent =
+                result.is_starred ? 'Unstar' : 'Star';
+            starForm.querySelector('[data-experience-star-count]').textContent = String(result.star_count);
+        } catch (error) {
+            console.error('Error toggling experience star:', error);
+            showToast('Gagal memperbarui star', error.message || 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+        } finally {
+            starButton.disabled = false;
+        }
+    });
+
     if (experienceForm) {
         experienceForm.addEventListener('submit', async (event) => {
             event.preventDefault();

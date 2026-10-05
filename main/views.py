@@ -286,16 +286,21 @@ def toggle_star_project(request, project_id):
     })
 
 @login_required(login_url="/login/")
+@require_POST
 def toggle_star_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
 
-    if request.method == "POST":
-        if request.user in experience.starred_by.all():
-            experience.starred_by.remove(request.user)
-        else:
-            experience.starred_by.add(request.user)
+    if experience.starred_by.filter(pk=request.user.pk).exists():
+        experience.starred_by.remove(request.user)
+    else:
+        experience.starred_by.add(request.user)
 
-    return redirect("main:show_experience")
+    starred_users = experience.starred_by.all()
+    return JsonResponse({
+        "is_starred": starred_users.filter(pk=request.user.pk).exists(),
+        "star_count": starred_users.count(),
+        "starred_by_names": ", ".join(starred_users.values_list("username", flat=True)),
+    })
 
 @require_POST
 def create_project_ajax(request):
