@@ -319,3 +319,22 @@ def create_project_ajax(request):
         )
 
     return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+@login_required(login_url="/login/")
+@require_POST
+def update_project_ajax(request, project_id):
+    if not is_editor(request.user):
+        return JsonResponse(
+            {"message": "Anda tidak memiliki izin untuk mengubah proyek."},
+            status=403,
+        )
+
+    project = get_object_or_404(Project, pk=project_id)
+    form = ProjectForm(request.POST, instance=project)
+    if form.is_valid():
+        project = form.save()
+        return JsonResponse(
+            {"message": "Proyek berhasil diperbarui.", "pk": str(project.id)},
+        )
+
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)

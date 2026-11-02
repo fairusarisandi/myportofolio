@@ -7,6 +7,10 @@
     const searchForm = document.getElementById('project-search-form');
     const searchInput = document.getElementById('search-input');
     const projectForm = document.getElementById('project-form');
+    const projectFormModal = document.getElementById('project-form-modal');
+    const projectFormTitle = document.querySelector('[data-project-form-title]');
+    const projectFormSubmit = document.querySelector('[data-project-form-submit]');
+    const projectAddButton = document.querySelector('[data-project-add-button]');
     const projectCardTemplate = document.getElementById('project-card-template');
 
     if (!config || !loadingState || !errorState || !emptyState || !gridContainer || !searchForm || !searchInput || !projectCardTemplate) {
@@ -17,7 +21,7 @@
     const projectEndpoints = {
         list: config.dataset.projectsEndpoint,
         create: config.dataset.createEndpoint,
-        edit: config.dataset.editUrlTemplate,
+        update: config.dataset.updateUrlTemplate,
         delete: config.dataset.deleteUrlTemplate,
         star: config.dataset.starUrlTemplate,
     };
@@ -65,10 +69,13 @@
         card.querySelector('[data-project-star-label]').textContent = project.is_starred ? 'Unstar' : 'Star';
         card.querySelector('[data-project-star-count]').textContent = String(project.star_count ?? 0);
 
-        const editLink = card.querySelector('[data-project-edit-link]');
-        if (editLink) {
-            editLink.href = projectUrl(projectEndpoints.edit, projectId);
-            editLink.setAttribute('aria-label', `Edit ${name}`);
+        const editButton = card.querySelector('[data-project-edit-button]');
+        if (editButton) {
+            editButton.dataset.projectId = projectId;
+            editButton.dataset.projectName = name;
+            editButton.dataset.projectDescription = project.description || '';
+            editButton.dataset.projectThumbnail = project.thumbnail || '';
+            editButton.setAttribute('aria-label', `Edit ${name}`);
         }
 
         const deleteTrigger = card.querySelector('[data-project-delete-trigger]');
@@ -148,6 +155,35 @@
         searchProjects();
     });
 
+    let editingProjectId = null;
+
+    function prepareProjectFormForCreate() {
+        if (!projectForm) {
+            return;
+        }
+        editingProjectId = null;
+        projectForm.reset();
+        projectFormTitle.textContent = 'Tambah Proyek Baru';
+        projectFormSubmit.textContent = 'Tambah Proyek';
+    }
+
+    projectAddButton?.addEventListener('click', prepareProjectFormForCreate);
+
+    gridContainer.addEventListener('click', (event) => {
+        const editButton = event.target.closest('[data-project-edit-button]');
+        if (!editButton || !projectForm || !projectFormModal) {
+            return;
+        }
+
+        editingProjectId = editButton.dataset.projectId;
+        projectForm.elements.namedItem('name').value = editButton.dataset.projectName;
+        projectForm.elements.namedItem('description').value = editButton.dataset.projectDescription;
+        projectForm.elements.namedItem('thumbnail').value = editButton.dataset.projectThumbnail;
+        projectFormTitle.textContent = 'Edit Proyek';
+        projectFormSubmit.textContent = 'Simpan Perubahan';
+        projectFormModal.showPopover();
+    });
+
     gridContainer.addEventListener('submit', async (event) => {
         const starForm = event.target.closest('[data-project-star-form]');
         if (!starForm) {
@@ -212,28 +248,56 @@
             }
             submitButton.disabled = true;
 
+            const isEditing = Boolean(editingProjectId);
+            const endpoint = isEditing
+                ? projectUrl(projectEndpoints.update, editingProjectId)
+                : projectEndpoints.create;
+
             try {
-                const response = await fetch(projectEndpoints.create, {
+                const response = await fetch(endpoint, {
                     method: 'POST',
-                    headers: { 'X-CSRFToken': projectForm.querySelector('[name="csrfmiddlewaretoken"]')?.value || '' },
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRFToken': projectForm.querySelector('[name="csrfmiddlewaretoken"]')?.value || '',
+                    },
                     body: new FormData(projectForm),
                 });
-                const result = await response.json().catch(() => ({}));
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    throw new Error(
+                        response.redirected
+                            ? 'Sesi login berakhir. Silakan login kembali.'
+                            : 'Server mengembalikan respons yang tidak valid.',
+                    );
+                }
+                const result = await response.json();
 
                 if (response.ok) {
                     projectForm.reset();
-                    document.getElementById('add-project-modal')?.hidePopover();
-                    showToast('Berhasil', 'Proyek baru berhasil ditambahkan!', 'success');
+                    projectFormModal?.hidePopover();
+                    editingProjectId = null;
+                    showToast(
+                        'Berhasil',
+                        isEditing ? 'Proyek berhasil diperbarui!' : 'Proyek baru berhasil ditambahkan!',
+                        'success',
+                    );
                     fetchProjects(searchInput.value.trim());
                 } else {
                     const errorMessages = result.errors
                         ? Object.values(result.errors).flat().map((error) => error.message)
                         : [result.message || `Terjadi kesalahan (status ${response.status}).`];
-                    showToast('Gagal menambahkan proyek', errorMessages.join(' '), 'error');
+                    showToast(
+                        isEditing ? 'Gagal mengubah proyek' : 'Gagal menambahkan proyek',
+                        errorMessages.join(' '),
+                        'error',
+                    );
                 }
             } catch (error) {
-                console.error('Error adding project:', error);
-                showToast('Gagal menambahkan proyek', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+                console.error(isEditing ? 'Error updating project:' : 'Error adding project:', error);
+                showToast(
+                    isEditing ? 'Gagal mengubah proyek' : 'Gagal menambahkan proyek',
+                    error.message || 'Tidak dapat terhubung ke server. Silakan coba lagi.',
+                    'error',
+                );
             } finally {
                 submitButton.disabled = false;
             }

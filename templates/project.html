@@ -13,7 +13,8 @@
                     {% if user.is_superuser %}
                         <button type="button"
                                 class="button project-add-button"
-                                popovertarget="add-project-modal">
+                                data-project-add-button
+                                popovertarget="project-form-modal">
                             <span aria-hidden="true">+</span>
                             Tambah Proyek
                         </button>
@@ -54,7 +55,7 @@
         </section>
     </main>
 
-    {% if user.is_superuser %}
+    {% if is_editor %}
         {% include "components/project_form_modal.html" %}
     {% endif %}
     <template id="project-card-template">
@@ -64,7 +65,7 @@
          hidden
          data-projects-endpoint="{% url 'main:get_projects_json' %}"
          data-create-endpoint="{% url 'main:create_project_ajax' %}"
-         data-edit-url-template="{% url 'main:edit_project' '00000000-0000-0000-0000-000000000000' %}"
+         data-update-url-template="{% url 'main:update_project_ajax' '00000000-0000-0000-0000-000000000000' %}"
          data-delete-url-template="{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}"
          data-star-url-template="{% url 'main:toggle_star_project' '00000000-0000-0000-0000-000000000000' %}"></div>
     <script src="{% static 'js/projects.js' %}"></script>
