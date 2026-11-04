@@ -128,7 +128,7 @@ def delete_experience(request, experience_id):
     return redirect("main:show_experience")
 
 def show_project(request):
-    title_query = request.GET.get("title", "").strip()
+    title_query = request.GET.get("name", "").strip()
 
     context = {
         "name": "Fairus",
