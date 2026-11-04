@@ -1,3 +1,4 @@
+{% if user.is_authenticated %}
 <form method="post" class="star-form" data-project-star-form>
     {% csrf_token %}
     <button type="submit" class="button button-star" data-project-star-button>
@@ -6,3 +7,8 @@
         <span class="star-count" data-project-star-count></span>
     </button>
 </form>
+{% else %}
+<a href="{% url 'main:login' %}" class="button button-star">
+    Login untuk star (<span data-project-star-count></span>)
+</a>
+{% endif %}

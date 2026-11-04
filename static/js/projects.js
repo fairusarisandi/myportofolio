@@ -17,12 +17,10 @@
         console.error('Project page is missing required elements.');
         return;
     }
-            
+
     const projectEndpoints = {
         list: config.dataset.projectsEndpoint,
-        create: config.dataset.createEndpoint,
-        update: config.dataset.updateUrlTemplate,
-        delete: config.dataset.deleteUrlTemplate,
+        detail: config.dataset.detailUrlTemplate,
         star: config.dataset.starUrlTemplate,
     };
     const searchDebounceDelay = 300;
@@ -41,9 +39,8 @@
         return template.replace(projectIdPlaceholder, encodeURIComponent(projectId));
     }
 
-    function buildProjectCardElement(item) {
-        const project = item.fields;
-        const projectId = item.pk;
+    function buildProjectCardElement(project) {
+        const projectId = project.id;
         const card = projectCardTemplate.content.firstElementChild.cloneNode(true);
         const image = card.querySelector('[data-project-thumbnail]');
         const name = project.name || '';
@@ -61,13 +58,12 @@
 
         const starForm = card.querySelector('[data-project-star-form]');
         const starButton = card.querySelector('[data-project-star-button]');
-        starForm.action = projectUrl(projectEndpoints.star, projectId);
-        starButton.classList.toggle('is-starred', Boolean(project.is_starred));
-        starButton.title = project.star_count > 0
-            ? `Dibintangi oleh ${project.starred_by_names || ''}`
-            : 'Jadilah yang pertama memberi star';
-        card.querySelector('[data-project-star-label]').textContent = project.is_starred ? 'Unstar' : 'Star';
-        card.querySelector('[data-project-star-count]').textContent = String(project.star_count ?? 0);
+        if (starForm && starButton) {
+            starForm.action = projectUrl(projectEndpoints.star, projectId);
+            updateStarState(starForm, project);
+        } else {
+            card.querySelector('[data-project-star-count]').textContent = String(project.star_count ?? 0);
+        }
 
         const editButton = card.querySelector('[data-project-edit-button]');
         if (editButton) {
@@ -91,7 +87,7 @@
                 button.setAttribute('popovertarget', modalId);
             });
             deleteModal.querySelector('[data-project-delete-form]').action =
-                projectUrl(projectEndpoints.delete, projectId);
+                projectUrl(projectEndpoints.detail, projectId);
         }
 
         return card;
@@ -121,15 +117,12 @@
                 throw new Error('Project API returned an invalid response.');
             }
 
-            gridContainer.replaceChildren();
+            gridContainer.replaceChildren(...projectData.map(buildProjectCardElement));
             if (projectData.length === 0) {
                 displayPageSection({ showEmpty: true });
                 return;
             }
 
-            projectData.forEach((item) => {
-                gridContainer.appendChild(buildProjectCardElement(item));
-            });
             displayPageSection({ showGrid: true });
         } catch (error) {
             if (error.name === 'AbortError') {
@@ -184,56 +177,82 @@
         projectFormModal.showPopover();
     });
 
-    gridContainer.addEventListener('submit', async (event) => {
-        const starForm = event.target.closest('[data-project-star-form]');
-        if (!starForm) {
-            return;
+    function getCookie(name) {
+        const prefix = `${name}=`;
+        const cookie = document.cookie.split(';').map(value => value.trim())
+            .find(value => value.startsWith(prefix));
+        return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+    }
+
+    function apiErrorMessage(data, status) {
+        function messages(value) {
+            if (typeof value === 'string') return [value];
+            if (value && typeof value === 'object') return Object.values(value).flatMap(messages);
+            return [];
         }
+        return messages(data).join(' ') || `Terjadi kesalahan (status ${status}).`;
+    }
 
+    async function writeProject(url, method, payload, form) {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': form?.querySelector('[name="csrfmiddlewaretoken"]')?.value
+                    || getCookie('csrftoken') || '',
+            },
+            body: payload === undefined ? undefined : JSON.stringify(payload),
+        });
+        if (response.ok && response.status === 204) return null;
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+            throw new Error(response.redirected
+                ? 'Sesi login berakhir. Silakan login kembali.'
+                : 'Server mengembalikan respons yang tidak valid.');
+        }
+        const data = await response.json();
+        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        return data;
+    }
+
+    function updateStarState(form, project) {
+        if (typeof project.is_starred !== 'boolean'
+            || !Number.isInteger(project.star_count)
+            || typeof project.starred_by_names !== 'string') {
+            throw new Error('Server mengembalikan status star yang tidak valid.');
+        }
+        const button = form.querySelector('[data-project-star-button]');
+        button.classList.toggle('is-starred', project.is_starred);
+        button.title = project.star_count > 0
+            ? `Dibintangi oleh ${project.starred_by_names}`
+            : 'Jadilah yang pertama memberi star';
+        form.querySelector('[data-project-star-label]').textContent = project.is_starred ? 'Unstar' : 'Star';
+        form.querySelector('[data-project-star-count]').textContent = String(project.star_count);
+    }
+
+    gridContainer.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-project-star-form], [data-project-delete-form]');
+        if (!form) return;
         event.preventDefault();
-        const starButton = starForm.querySelector('[data-project-star-button]');
-        starButton.disabled = true;
-
+        const button = form.querySelector('button[type="submit"]');
+        if (button.disabled) return;
+        button.disabled = true;
+        const isStar = form.matches('[data-project-star-form]');
         try {
-            const response = await fetch(starForm.action, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRFToken': starForm.querySelector('[name="csrfmiddlewaretoken"]').value,
-                },
-            });
-            if (!response.headers.get('content-type')?.includes('application/json')) {
-                throw new Error(
-                    response.redirected
-                        ? 'Silakan login untuk memberi star.'
-                        : 'Server mengembalikan respons yang tidak valid.',
-                );
+            const result = await writeProject(form.action, isStar ? 'POST' : 'DELETE', undefined, form);
+            if (isStar) {
+                updateStarState(form, result);
+            } else {
+                form.closest('[data-project-delete-modal]').hidePopover();
+                showToast('Berhasil', 'Proyek berhasil dihapus!', 'success');
+                await fetchProjects(searchInput.value.trim());
             }
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || `Terjadi kesalahan (status ${response.status}).`);
-            }
-            if (
-                typeof result.is_starred !== 'boolean'
-                || !Number.isInteger(result.star_count)
-                || typeof result.starred_by_names !== 'string'
-            ) {
-                throw new Error('Server mengembalikan status star yang tidak valid.');
-            }
-
-            starButton.classList.toggle('is-starred', result.is_starred);
-            starButton.title = result.star_count > 0
-                ? `Dibintangi oleh ${result.starred_by_names}`
-                : 'Jadilah yang pertama memberi star';
-            starForm.querySelector('[data-project-star-label]').textContent =
-                result.is_starred ? 'Unstar' : 'Star';
-            starForm.querySelector('[data-project-star-count]').textContent = String(result.star_count);
         } catch (error) {
-            console.error('Error toggling project star:', error);
-            showToast('Gagal memperbarui star', error.message || 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+            console.error('Error updating project:', error);
+            showToast(isStar ? 'Gagal memperbarui star' : 'Gagal menghapus proyek',
+                error.message || 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
         } finally {
-            starButton.disabled = false;
+            button.disabled = false;
         }
     });
 
@@ -246,51 +265,29 @@
                 console.error('Project form is missing its submit button.');
                 return;
             }
+            if (submitButton.disabled) return;
             submitButton.disabled = true;
 
             const isEditing = Boolean(editingProjectId);
             const endpoint = isEditing
-                ? projectUrl(projectEndpoints.update, editingProjectId)
-                : projectEndpoints.create;
+                ? projectUrl(projectEndpoints.detail, editingProjectId)
+                : projectEndpoints.list;
 
             try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-CSRFToken': projectForm.querySelector('[name="csrfmiddlewaretoken"]')?.value || '',
-                    },
-                    body: new FormData(projectForm),
-                });
-                if (!response.headers.get('content-type')?.includes('application/json')) {
-                    throw new Error(
-                        response.redirected
-                            ? 'Sesi login berakhir. Silakan login kembali.'
-                            : 'Server mengembalikan respons yang tidak valid.',
-                    );
-                }
-                const result = await response.json();
-
-                if (response.ok) {
-                    projectForm.reset();
-                    projectFormModal?.hidePopover();
-                    editingProjectId = null;
-                    showToast(
-                        'Berhasil',
-                        isEditing ? 'Proyek berhasil diperbarui!' : 'Proyek baru berhasil ditambahkan!',
-                        'success',
-                    );
-                    fetchProjects(searchInput.value.trim());
-                } else {
-                    const errorMessages = result.errors
-                        ? Object.values(result.errors).flat().map((error) => error.message)
-                        : [result.message || `Terjadi kesalahan (status ${response.status}).`];
-                    showToast(
-                        isEditing ? 'Gagal mengubah proyek' : 'Gagal menambahkan proyek',
-                        errorMessages.join(' '),
-                        'error',
-                    );
-                }
+                const fields = new FormData(projectForm);
+                const payload = Object.fromEntries(
+                    ['name', 'description', 'thumbnail'].map(name => [name, fields.get(name)]),
+                );
+                await writeProject(endpoint, isEditing ? 'PATCH' : 'POST', payload, projectForm);
+                projectForm.reset();
+                projectFormModal?.hidePopover();
+                editingProjectId = null;
+                showToast(
+                    'Berhasil',
+                    isEditing ? 'Proyek berhasil diperbarui!' : 'Proyek baru berhasil ditambahkan!',
+                    'success',
+                );
+                await fetchProjects(searchInput.value.trim());
             } catch (error) {
                 console.error(isEditing ? 'Error updating project:' : 'Error adding project:', error);
                 showToast(

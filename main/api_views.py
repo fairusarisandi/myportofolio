@@ -18,9 +18,9 @@ from main.serializers import ProjectSerializer
 def project_list(request):
     if request.method in ("GET", "HEAD"):
         projects = Project.objects.prefetch_related("starred_by").order_by("name", "id")
-        name = request.query_params.get("title", "").strip()
+        name = request.query_params.get("name", "").strip()
         if name:
-            projects = projects.filter(title__icontains=name)
+            projects = projects.filter(name__icontains=name)
         serializer = ProjectSerializer(
             projects, many=True, context={"request": request},
         )

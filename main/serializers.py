@@ -37,4 +37,4 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
     def get_starred_by_names(self, obj):
-        return self.get_starred_by(obj)
+        return ", ".join(user.username for user in obj.starred_by.all())

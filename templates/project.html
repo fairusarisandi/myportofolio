@@ -63,10 +63,8 @@
     </template>
     <div id="project-config"
          hidden
-         data-projects-endpoint="{% url 'main:get_projects_json' %}"
-         data-create-endpoint="{% url 'main:create_project_ajax' %}"
-         data-update-url-template="{% url 'main:update_project_ajax' '00000000-0000-0000-0000-000000000000' %}"
-         data-delete-url-template="{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}"
-         data-star-url-template="{% url 'main:toggle_star_project' '00000000-0000-0000-0000-000000000000' %}"></div>
+         data-projects-endpoint="{% url 'api:project-list' %}"
+         data-detail-url-template="{% url 'api:project-detail' '00000000-0000-0000-0000-000000000000' %}"
+         data-star-url-template="{% url 'api:project-star' '00000000-0000-0000-0000-000000000000' %}"></div>
     <script src="{% static 'js/projects.js' %}"></script>
 {% endblock content %}
