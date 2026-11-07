@@ -13,7 +13,8 @@
                     {% if user.is_superuser %}
                         <button type="button"
                                 class="button experience-add-button"
-                                popovertarget="add-experience-modal">
+                                data-experience-add-button
+                                popovertarget="experience-form-modal">
                             <span aria-hidden="true">+</span>
                             Tambah Experience
                         </button>
@@ -55,16 +56,17 @@
         </section>
     </main>
 
+    {% if is_editor %}
+        {% include "components/experience_form_modal.html" %}
+    {% endif %}
     <template id="experience-card-template">
         {% include "components/experience_card.html" %}
     </template>
     <div id="experience-config"
          hidden
-         data-experience-endpoint="{% url 'main:get_experience_json' %}"
-         data-create-endpoint="{% url 'main:create_experience_ajax' %}"
-         data-edit-url-template="{% url 'main:edit_experience' '00000000-0000-0000-0000-000000000000' %}"
-         data-delete-url-template="{% url 'main:delete_experience' '00000000-0000-0000-0000-000000000000' %}"
-         data-star-url-template="{% url 'main:toggle_star_experience' '00000000-0000-0000-0000-000000000000' %}">
+         data-experience-endpoint="{% url 'api:experience-list' %}"
+         data-detail-url-template="{% url 'api:experience-detail' '00000000-0000-0000-0000-000000000000' %}"
+         data-star-url-template="{% url 'api:experience-star' '00000000-0000-0000-0000-000000000000' %}">
     </div>
     <script src="{% static 'js/experience.js' %}"></script>
 {% endblock content %}

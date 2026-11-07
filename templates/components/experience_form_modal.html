@@ -1,27 +1,27 @@
-<div id="add-experience-modal"
+<div id="experience-form-modal"
      class="experience-form-modal"
      popover="auto"
      role="dialog"
      aria-modal="true"
-     aria-labelledby="add-experience-modal-title">
+     aria-labelledby="experience-form-modal-title">
     <button type="button"
             class="experience-form-modal__backdrop"
-            popovertarget="add-experience-modal"
+            popovertarget="experience-form-modal"
             popovertargetaction="hide"
-            aria-label="Tutup form tambah experience"></button>
+            aria-label="Tutup form experience"></button>
 
     <div class="experience-form-modal__content">
         <button type="button"
                 class="experience-form-modal__close"
-                popovertarget="add-experience-modal"
+                popovertarget="experience-form-modal"
                 popovertargetaction="hide"
-                aria-label="Tutup form tambah experience">×</button>
+                aria-label="Tutup form experience">×</button>
 
-        <h2 id="add-experience-modal-title">Tambah Experience Baru</h2>
+        <h2 id="experience-form-modal-title" data-experience-form-title>Tambah Experience Baru</h2>
         <form id="experience-form"
               method="post"
               action="{% url 'main:create_experience' %}"
-              class="experience-form">
+              class="project-form">
             {% csrf_token %}
             {% for field in form %}
                 <div class="form-group">
@@ -35,9 +35,9 @@
             <div class="experience-form-modal__actions">
                 <button type="button"
                         class="button button-secondary"
-                        popovertarget="add-experience-modal"
+                        popovertarget="experience-form-modal"
                         popovertargetaction="hide">Batal</button>
-                <button type="submit" class="button">Tambah Experience</button>
+                <button type="submit" class="button" data-experience-form-submit>Tambah Experience</button>
             </div>
         </form>
     </div>
