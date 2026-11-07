@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsPortfolioOwnerOrReadOnly(BasePermission):
-    message = "Only the portfolio owner can create or delete projects; editors can update them."
+    message = "Only the portfolio owner can create or delete data; editors can update it."
 
     def has_permission(self, request, view):
         return (
