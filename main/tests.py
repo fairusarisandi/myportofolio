@@ -186,16 +186,16 @@ class MainTest(TestCase):
         self.assertTemplateUsed(response, "experience.html")
         self.assertContains(response, 'id="experience-card-template"')
         self.assertContains(response, 'id="grid"')
-        self.assertContains(response, f'data-experience-endpoint="{reverse("main:get_experience_json")}"')
+        self.assertContains(response, f'data-experience-endpoint="{reverse("api:experience-list")}"')
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
         self.assertContains(response, f'href="{reverse("main:show_project")}"')
 
-        data_response = self.client.get(reverse("main:get_experience_json"))
+        data_response = self.client.get(reverse("api:experience-list"))
         self.assertEqual(data_response.status_code, 200)
         data = data_response.json()
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["pk"], str(self.experience.pk))
-        fields = data[0]["fields"]
+        self.assertEqual(data[0]["id"], str(self.experience.pk))
+        fields = data[0]
         self.assertEqual(fields["title"], self.experience.title)
         self.assertEqual(fields["description"], self.experience.description)
         self.assertEqual(fields["category_display"], "Full-Time")
@@ -204,14 +204,14 @@ class MainTest(TestCase):
     def test_completed_experience(self):
         self.experience.ended_at = timezone.localdate()
         self.experience.save()
-        response = self.client.get(reverse("main:get_experience_json"))
+        response = self.client.get(reverse("api:experience-list"))
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.experience.is_ongoing)
         data = response.json()
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["pk"], str(self.experience.pk))
-        self.assertEqual(data[0]["fields"]["ended_at"], self.experience.ended_at.isoformat())
+        self.assertEqual(data[0]["id"], str(self.experience.pk))
+        self.assertEqual(data[0]["ended_at"], self.experience.ended_at.isoformat())
 
     def test_empty_experience_page(self):
         Experience.objects.all().delete()
@@ -220,7 +220,7 @@ class MainTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="empty"')
         self.assertContains(response, "Belum ada experience yang ditambahkan atau ditemukan.")
-        data_response = self.client.get(reverse("main:get_experience_json"))
+        data_response = self.client.get(reverse("api:experience-list"))
         self.assertEqual(data_response.status_code, 200)
         self.assertEqual(data_response.json(), [])
 
