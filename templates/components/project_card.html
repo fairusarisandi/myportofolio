@@ -1,12 +1,14 @@
 <article class="experience-card">
-    <img data-project-thumbnail
+    <img data-project-image
          alt=""
          class="project-image"
          hidden>
-    <h2 data-project-name></h2>
+    <h2 data-project-title></h2>
     <p class="experience-description" data-project-description></p>
+    <p hidden>Tech Stack <span data-project-tech-stack></span></p>
     <div class="project-card-actions">
         <div class="project-actions">
+            <a class="button button-secondary hide" data-project-url hidden>Lihat Proyek</a>
             {% include "components/project_star.html" %}
             {% if is_editor %}
                 {% include "components/project_edit.html" %}

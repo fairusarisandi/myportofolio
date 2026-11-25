@@ -15,22 +15,28 @@ class ProjectAPITest(APITestCase):
         )
         self.visitor = User.objects.create_user(username="visitor", password="test-password")
         self.project = Project.objects.create(
-            name="Portfolio", description="My website", thumbnail="https://example.com/portfolio.png",
+            title="Portfolio", description="My website", project_image_url="https://example.com/portfolio.png",
         )
         self.list_url = reverse("api:project-list")
         self.detail_url = reverse("api:project-detail", args=[self.project.id])
         self.star_url = reverse("api:project-star", args=[self.project.id])
         self.payload = {
-            "name": "New project", "description": "A useful app", "thumbnail": "https://example.com/project.png",
+            "title": "New project",
+            "description": "A useful app",
+            "tech_stack": "Python, Django",
+            "project_url": "https://example.com/project",
+            "project_image_url": "https://example.com/project.png",
         }
 
     def test_public_list_and_detail(self):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]["id"], str(self.project.id))
-        self.assertEqual(response.data[0]["name"], self.project.name)
+        self.assertEqual(response.data[0]["title"], self.project.title)
         self.assertEqual(response.data[0]["description"], self.project.description)
-        self.assertEqual(response.data[0]["thumbnail"], self.project.thumbnail)
+        self.assertEqual(response.data[0]["project_image_url"], self.project.project_image_url)
+        self.assertEqual(response.data[0]["tech_stack"], "")
+        self.assertIsNone(response.data[0]["project_url"])
         self.assertFalse(response.data[0]["is_starred"])
         self.assertNotIn("fields", response.data[0])
         self.assertEqual(self.client.get(self.detail_url).status_code, status.HTTP_200_OK)
@@ -51,24 +57,28 @@ class ProjectAPITest(APITestCase):
         for user in (None, self.visitor):
             self.client.force_authenticate(user=user)
             self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
-            self.assertEqual(self.client.patch(self.detail_url, {"name": "Changed"}, format="json").status_code, 403)
+            self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, 403)
             self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
         self.assertEqual(Project.objects.count(), 1)
         self.project.refresh_from_db()
-        self.assertEqual(self.project.name, "Portfolio")
+        self.assertEqual(self.project.title, "Portfolio")
 
     def test_owner_can_create(self):
         self.client.force_authenticate(user=self.owner)
         response = self.client.post(self.list_url, self.payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Project.objects.filter(pk=response.data["id"]).exists())
+        project = Project.objects.get(pk=response.data["id"])
+        self.assertEqual(project.tech_stack, self.payload["tech_stack"])
+        self.assertEqual(project.project_url, self.payload["project_url"])
+        self.assertEqual(project.project_image_url, self.payload["project_image_url"])
 
     def test_validation(self):
         self.client.force_authenticate(user=self.owner)
         for changes, field in [
-            ({"name": "   "}, "name"),
-            ({"name": '<img src="x" onerror="alert(1)">'}, "name"),
-            ({"thumbnail": "javascript:alert(1)"}, "thumbnail"),
+            ({"title": "   "}, "title"),
+            ({"title": '<img src="x" onerror="alert(1)">'}, "title"),
+            ({"project_image_url": "javascript:alert(1)"}, "project_image_url"),
+            ({"project_url": "invalid-url"}, "project_url"),
         ]:
             response = self.client.post(self.list_url, {**self.payload, **changes}, format="json")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -77,12 +87,12 @@ class ProjectAPITest(APITestCase):
 
     def test_patch_put_and_delete(self):
         self.client.force_authenticate(user=self.owner)
-        response = self.client.patch(self.detail_url, {"name": "Changed"}, format="json")
+        response = self.client.patch(self.detail_url, {"title": "Changed"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.project.refresh_from_db()
-        self.assertEqual(self.project.name, "Changed")
+        self.assertEqual(self.project.title, "Changed")
         self.assertEqual(self.project.description, "My website")
-        response = self.client.put(self.detail_url, {"name": "Incomplete"}, format="json")
+        response = self.client.put(self.detail_url, {"title": "Incomplete"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = self.client.put(self.detail_url, self.payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -122,16 +132,16 @@ class ProjectAPITest(APITestCase):
         self.visitor.is_staff = True
         self.visitor.save()
         self.client.force_authenticate(user=self.visitor)
-        response = self.client.patch(self.detail_url, {"name": "Changed"}, format="json")
+        response = self.client.patch(self.detail_url, {"title": "Changed"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_editor_can_update_but_cannot_create_or_delete(self):
         self.visitor.groups.add(Group.objects.create(name="Editor"))
         self.client.force_authenticate(user=self.visitor)
-        response = self.client.patch(self.detail_url, {"name": "Edited"}, format="json")
+        response = self.client.patch(self.detail_url, {"title": "Edited"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.project.refresh_from_db()
-        self.assertEqual(self.project.name, "Edited")
+        self.assertEqual(self.project.title, "Edited")
         self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
         self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
         self.assertTrue(Project.objects.filter(pk=self.project.id).exists())

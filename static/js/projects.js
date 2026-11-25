@@ -25,6 +25,7 @@
     };
     const searchDebounceDelay = 300;
     const projectIdPlaceholder = '00000000-0000-0000-0000-000000000000';
+    const projectFields = ['title', 'description', 'tech_stack', 'project_url', 'project_image_url'];
     let projectsAbortController;
     let searchDebounceTimer;
 
@@ -42,19 +43,30 @@
     function buildProjectCardElement(project) {
         const projectId = project.id;
         const card = projectCardTemplate.content.firstElementChild.cloneNode(true);
-        const image = card.querySelector('[data-project-thumbnail]');
-        const name = project.name || '';
+        const image = card.querySelector('[data-project-image]');
+        const title = project.title;
         const modalId = `delete-project-${projectId}`;
         const modalTitleId = `delete-project-title-${projectId}`;
 
-        image.hidden = !project.thumbnail;
-        image.classList.toggle('hide', !project.thumbnail);
-        if (project.thumbnail) {
-            image.src = project.thumbnail;
-            image.alt = `Gambar ${name}`;
+        image.hidden = !project.project_image_url;
+        image.classList.toggle('hide', image.hidden);
+        if (project.project_image_url) {
+            image.src = project.project_image_url;
+            image.alt = `Gambar ${title}`;
         }
-        card.querySelector('[data-project-name]').textContent = name;
+        card.querySelector('[data-project-title]').textContent = title;
         card.querySelector('[data-project-description]').textContent = project.description || '';
+
+        const techStack = card.querySelector('[data-project-tech-stack]');
+        techStack.textContent = project.tech_stack;
+        techStack.parentElement.hidden = !project.tech_stack;
+
+        const projectLink = card.querySelector('[data-project-url]');
+        if (project.project_url) {
+            projectLink.href = project.project_url;
+            projectLink.hidden = false;
+            projectLink.classList.remove('hide');
+        }
 
         const starForm = card.querySelector('[data-project-star-form]');
         const starButton = card.querySelector('[data-project-star-button]');
@@ -68,10 +80,10 @@
         const editButton = card.querySelector('[data-project-edit-button]');
         if (editButton) {
             editButton.dataset.projectId = projectId;
-            editButton.dataset.projectName = name;
-            editButton.dataset.projectDescription = project.description || '';
-            editButton.dataset.projectThumbnail = project.thumbnail || '';
-            editButton.setAttribute('aria-label', `Edit ${name}`);
+            for (const field of projectFields) {
+                editButton.dataset[field] = project[field] ?? '';
+            }
+            editButton.setAttribute('aria-label', `Edit ${title}`);
         }
 
         const deleteTrigger = card.querySelector('[data-project-delete-trigger]');
@@ -80,9 +92,9 @@
             deleteModal.id = modalId;
             deleteModal.setAttribute('aria-labelledby', modalTitleId);
             deleteTrigger.setAttribute('popovertarget', modalId);
-            deleteTrigger.setAttribute('aria-label', `Hapus ${name}`);
+            deleteTrigger.setAttribute('aria-label', `Hapus ${title}`);
             deleteModal.querySelector('[data-project-delete-title]').id = modalTitleId;
-            deleteModal.querySelector('[data-project-delete-name]').textContent = name;
+            deleteModal.querySelector('[data-project-delete-name]').textContent = title;
             deleteModal.querySelectorAll('[popovertargetaction="hide"]').forEach((button) => {
                 button.setAttribute('popovertarget', modalId);
             });
@@ -169,9 +181,9 @@
         }
 
         editingProjectId = editButton.dataset.projectId;
-        projectForm.elements.namedItem('name').value = editButton.dataset.projectName;
-        projectForm.elements.namedItem('description').value = editButton.dataset.projectDescription;
-        projectForm.elements.namedItem('thumbnail').value = editButton.dataset.projectThumbnail;
+        for (const field of projectFields) {
+            projectForm.elements.namedItem(field).value = editButton.dataset[field];
+        }
         projectFormTitle.textContent = 'Edit Proyek';
         projectFormSubmit.textContent = 'Simpan Perubahan';
         projectFormModal.showPopover();
@@ -276,7 +288,7 @@
             try {
                 const fields = new FormData(projectForm);
                 const payload = Object.fromEntries(
-                    ['name', 'description', 'thumbnail'].map(name => [name, fields.get(name)]),
+                    projectFields.map(field => [field, fields.get(field)]),
                 );
                 await writeProject(endpoint, isEditing ? 'PATCH' : 'POST', payload, projectForm);
                 projectForm.reset();

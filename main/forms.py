@@ -7,19 +7,23 @@ class ProjectForm(ModelForm):
     class Meta:
         model = Project
         fields = [
-            "name",
+            "title",
             "description",
-            "thumbnail",
+            "tech_stack",
+            "project_url",
+            "project_image_url",
         ]
 
         labels = {
-            "name": "Nama Proyek",
+            "title": "Judul Proyek",
             "description": "Deskripsi Proyek",
-            "thumbnail": "Thumbnail Proyek",
+            "tech_stack": "Tech Stack",
+            "project_url": "URL Proyek",
+            "project_image_url": "URL Gambar Proyek",
         }
 
         widgets = {
-            "name": TextInput(
+            "title": TextInput(
                 attrs={
                     "placeholder": "Portfolio Website",
                     "maxlength": 255,
@@ -31,7 +35,7 @@ class ProjectForm(ModelForm):
                     "rows": 3,
                 }
             ),
-            "thumbnail": URLInput(
+            "project_image_url": URLInput(
                 attrs={
                     "placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000",
                 }

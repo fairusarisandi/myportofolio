@@ -181,7 +181,7 @@ def get_projects_json(request):
     projects = Project.objects.prefetch_related("starred_by").all()
 
     if title_query:
-        projects = projects.filter(title_icontains=title_query)
+        projects = projects.filter(title__icontains=title_query)
 
     data = []
     for project in projects:
@@ -193,9 +193,11 @@ def get_projects_json(request):
             "pk": str(project.id),
             "fields": {
                 "id": project.id,
-                "name": project.name,
+                "name": project.title,
                 "description": project.description,
-                "thumbnail": project.thumbnail,
+                "thumbnail": project.project_image_url,
+                "tech_stack": project.tech_stack,
+                "project_url": project.project_url,
                 "star_count": starred_users.count(),
                 "is_starred": is_starred,
                 "starred_by_names": starred_by_names,

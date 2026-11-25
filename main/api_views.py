@@ -24,10 +24,10 @@ def api_logout(request):
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_list(request):
     if request.method in ("GET", "HEAD"):
-        projects = Project.objects.prefetch_related("starred_by").order_by("name", "id")
-        name = request.query_params.get("name", "").strip()
-        if name:
-            projects = projects.filter(name__icontains=name)
+        projects = Project.objects.prefetch_related("starred_by").order_by("title", "id")
+        title_query = request.query_params.get("name", "").strip()
+        if title_query:
+            projects = projects.filter(title__icontains=title_query)
         serializer = ProjectSerializer(
             projects, many=True, context={"request": request},
         )

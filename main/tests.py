@@ -31,9 +31,9 @@ class MainTest(TestCase):
         )
 
         self.project = Project.objects.create(
-            name="Project Django",
+            title="Project Django",
             description="Project untuk belajar Django",
-            thumbnail="http://127.0.0.1:8000/static/img/fairus.jpg",
+            project_image_url="http://127.0.0.1:8000/static/img/fairus.jpg",
         )
 
     def test_experience_model(self):
@@ -112,9 +112,11 @@ class MainTest(TestCase):
         response = self.client.post(
             reverse("main:update_project_ajax", args=[self.project.pk]),
             {
-                "name": "Updated project",
+                "title": "Updated project",
                 "description": "Updated description",
-                "thumbnail": "https://example.com/updated.png",
+                "tech_stack": "Django, SQLite",
+                "project_url": "https://example.com/updated",
+                "project_image_url": "https://example.com/updated.png",
             },
             HTTP_ACCEPT="application/json",
         )
@@ -122,9 +124,11 @@ class MainTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "Proyek berhasil diperbarui.", "pk": str(self.project.pk)})
         self.project.refresh_from_db()
-        self.assertEqual(self.project.name, "Updated project")
+        self.assertEqual(self.project.title, "Updated project")
         self.assertEqual(self.project.description, "Updated description")
-        self.assertEqual(self.project.thumbnail, "https://example.com/updated.png")
+        self.assertEqual(self.project.tech_stack, "Django, SQLite")
+        self.assertEqual(self.project.project_url, "https://example.com/updated")
+        self.assertEqual(self.project.project_image_url, "https://example.com/updated.png")
 
     def test_update_project_ajax_rejects_non_editors(self):
         user = get_user_model().objects.create_user(username="project-viewer", password="password")
@@ -133,9 +137,9 @@ class MainTest(TestCase):
         response = self.client.post(
             reverse("main:update_project_ajax", args=[self.project.pk]),
             {
-                "name": "Updated project",
+                "title": "Updated project",
                 "description": "Updated description",
-                "thumbnail": "",
+                "project_image_url": "",
             },
             HTTP_ACCEPT="application/json",
         )
@@ -240,9 +244,9 @@ class MainTest(TestCase):
         data = data_response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], str(self.project.pk))
-        self.assertEqual(data[0]["name"], self.project.name)
+        self.assertEqual(data[0]["title"], self.project.title)
         self.assertEqual(data[0]["description"], self.project.description)
-        self.assertEqual(data[0]["thumbnail"], self.project.thumbnail)
+        self.assertEqual(data[0]["project_image_url"], self.project.project_image_url)
 
     def test_empty_project_page(self):
         Project.objects.all().delete()

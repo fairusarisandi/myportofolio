@@ -55,12 +55,14 @@ class TechStack(models.Model):
 
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
     description = models.TextField()
-    thumbnail = models.URLField(blank=True, null=True)
+    tech_stack = models.CharField(max_length=255, blank=True)
+    project_url = models.URLField(blank=True, null=True)
+    project_image_url = models.URLField(blank=True, null=True)
     starred_by = models.ManyToManyField(
         User, related_name="starred_project", blank= True
     )
 
     def __str__(self):
-        return self.name
+        return self.title

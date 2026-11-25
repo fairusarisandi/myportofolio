@@ -12,12 +12,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [
-            "id", "name", "description", "thumbnail", "starred_by",
+            "id", "title", "description", "tech_stack", "project_url", "project_image_url",
+            "starred_by",
             "star_count", "is_starred", "starred_by_names",
         ]
         read_only_fields = ["id"]
 
-    def validate_name(self, value):
+    def validate_title(self, value):
         value = strip_tags(value).strip()
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
@@ -25,6 +26,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def validate_description(self, value):
         return strip_tags(value)
+
+    def validate_tech_stack(self, value):
+        return strip_tags(value).strip()
 
     def get_star_count(self, obj):
         return len(obj.starred_by.all())
