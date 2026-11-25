@@ -20,7 +20,6 @@ def api_logout(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_list(request):
     if request.method in ("GET", "HEAD"):

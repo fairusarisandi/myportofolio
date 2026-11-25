@@ -54,18 +54,31 @@ class ProjectAPITest(APITestCase):
         self.assertEqual(self.client.get(url).status_code, status.HTTP_404_NOT_FOUND)
 
     def test_guest_and_visitor_cannot_write(self):
-        for user in (None, self.visitor):
+        for user, expected_create_status in (
+            (None, status.HTTP_401_UNAUTHORIZED),
+            (self.visitor, status.HTTP_403_FORBIDDEN),
+        ):
             self.client.force_authenticate(user=user)
-            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+            response = self.client.post(self.list_url, self.payload, format="json")
+            self.assertEqual(response.status_code, expected_create_status)
             self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, 403)
             self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
         self.assertEqual(Project.objects.count(), 1)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, "Portfolio")
 
-    def test_owner_can_create(self):
-        self.client.force_authenticate(user=self.owner)
-        response = self.client.post(self.list_url, self.payload, format="json")
+    def test_owner_can_create_with_api_token(self):
+        client = APIClient(enforce_csrf_checks=True)
+        login_response = client.post(
+            reverse("api:api_token_auth"),
+            {"username": self.owner.username, "password": "test-password"},
+            format="json",
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+        token = login_response.data["token"]
+        response = client.post(
+            self.list_url, self.payload, format="json", HTTP_AUTHORIZATION=f"Token {token}",
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         project = Project.objects.get(pk=response.data["id"])
         self.assertEqual(project.tech_stack, self.payload["tech_stack"])
